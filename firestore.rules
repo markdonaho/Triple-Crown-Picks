@@ -3,76 +3,50 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- Helper Functions ---
+    // Helper: Is the user signed in?
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    function hasAdminRole() {
-      // Check the 'role' field on the user's profile
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    function isRaceOpenForVoting(raceId) {
-      return get(/databases/$(database)/documents/races/$(raceId)).data.status == 'Voting Open';
-    }
-
     // --- User Profiles ---
     match /users/{userId} {
-      // Users can read/write their own profile.
-      allow read, write: if isOwner(userId);
-      // Admins can read any profile (needed for scoreboard names)
-      // Optional: Allow admins to update roles?
-      // allow read, update: if hasAdminRole();
-    }
-
-    // --- Races Collection & Subcollections ---
-    match /races/{raceId} {
-      // Allow authenticated users to read race details.
+      // Any signed-in user can read any profile.
       allow read: if isSignedIn();
-      // Allow Admins to create/update race documents (name, date, status).
-      allow write: if hasAdminRole();
-
-      // --- Horses Subcollection (under each race) ---
-      match /horses/{horseId} {
-        // Allow authenticated users to read horses for the race.
-        allow read: if isSignedIn();
-        // Allow Admins to manage horses within a specific race.
-        allow write: if hasAdminRole();
-      }
-
-      // --- Picks Subcollection (under each race) ---
-      match /picks/{pickId} {
-        // Allow authenticated users to read their own picks for the race.
-        allow read: if isOwner(resource.data.user_id);
-        // Allow admins to read all picks for scoring/display.
-        allow read: if hasAdminRole();
-
-        // Allow users to create their pick *only* if voting is open.
-        allow create: if isOwner(request.resource.data.user_id) && isRaceOpenForVoting(raceId);
-        // Allow users to update/delete their own pick *only* if voting is open.
-        allow update, delete: if isOwner(resource.data.user_id) && isRaceOpenForVoting(raceId);
-      }
-
-      // --- Results Subcollection (under each race) ---
-      // Assumes a single document named 'official_results' holds the 1st, 2nd, 3rd place horses.
-      match /results/official_results {
-        // Allow authenticated users to read the official results.
-        allow read: if isSignedIn();
-        // Allow Admins to set/update the results document for the race.
-        // Implicitly prevents setting results if voting isn't closed (via app logic, or add status check here too).
-        allow write: if hasAdminRole();
-      }
+      // Users can write their own profile only.
+      allow write: if isSignedIn() && request.auth.uid == userId;
     }
 
-    // Fallback: Deny all other reads/writes by default
-    // This is implicitly covered by not having rules, but can be explicit:
-    // match /{document=**} {
-    //  allow read, write: if false;
-    // }
+    // --- Races Collection (Root Level) ---
+    match /races/{raceId} {
+      // Any signed-in user can read race info.
+      allow read: if isSignedIn();
+      // Write access is denied. Manage races via console or admin SDK.
+      allow write: if false;
+    }
+
+    // --- Horses Collection (Root Level) ---
+    match /horses/{horseId} {
+      // Any signed-in user can read horse info.
+      allow read: if isSignedIn();
+      // Write access is denied. Manage horses via console or admin SDK.
+      allow write: if false;
+    }
+
+    // --- Picks Collection (Root Level) ---
+    match /picks/{pickId} {
+      // Any signed-in user can read any pick.
+      // App logic should handle displaying only relevant picks.
+      allow read: if isSignedIn();
+
+      // Users can create/update their own picks.
+      // Relies on client code to check race status ('open'/'upcoming').
+      // Ensures userId is set correctly on create and cannot be changed on update.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+                      && request.resource.data.userId == resource.data.userId; // Prevent changing owner
+
+      // Delete access is denied.
+      allow delete: if false;
+    }
   }
 }

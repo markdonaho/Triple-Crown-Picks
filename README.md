@@ -76,7 +76,6 @@ Objective: Build UI and logic for race selection, horse management, picks submis
 *   [x] `useAuth` hook (`src/hooks/useAuth.js`) created to manage Firebase Auth state and check `isAdmin` status from Firestore.
 *   [x] Implement Login Page (`<LoginPage>`) with Firebase email/password sign-in.
 *   [x] Implement Signup Page (`<SignupPage>`) with Firebase email/password sign-up & Firestore user document creation.
-*   [ ] Implement Google Sign-in (Optional).
 *   [x] Store user data (including `isAdmin`) in `users` collection on signup.
 *   Admin Roles: [x] `useAuth` hook checks `isAdmin`. `ProtectedRoute` enforces admin access.
 
@@ -87,11 +86,11 @@ Objective: Build UI and logic for race selection, horse management, picks submis
     *   [ ] List, add, edit, remove horses.
     *   [ ] Associate with races.
 *   Picks Page (`<PicksPage>`, `/picks/:raceId`):
-    *   [ ] Implement `RaceSelector` logic (fetch races).
-    *   [ ] Fetch horses for the selected race.
-    *   [ ] Implement `PicksForm` logic (fetch/pre-fill user picks, handle submit/update to Firestore based on race `status`).
-    *   [ ] Implement `PicksDisplay` logic (fetch horse names).
-    *   [ ] Fetch race `status` to control form.
+    *   [x] Implement `RaceSelector` logic (fetch races).
+    *   [x] Fetch horses for the selected race.
+    *   [x] Implement `PicksForm` logic (fetch/pre-fill user picks, handle submit/update to Firestore based on race `status`).
+    *   [x] Implement `PicksDisplay` logic (fetch horse names).
+    *   [x] Fetch race `status` to control form.
 *   Results Page (`<ResultsPage>`, `/results/:raceId`):
     *   [ ] Implement `RaceSelector` logic.
     *   [ ] Implement `ResultsAdminForm` (Admin Only) to set race `status` and results in Firestore.
@@ -99,8 +98,8 @@ Objective: Build UI and logic for race selection, horse management, picks submis
     *   [ ] Implement `WinnerDisplay` logic (trigger/display winner calculation).
 
 **Logic Implementation:**
-*   Race Data Fetching: [ ] Fetch races, horses, picks, results from Firestore where needed.
-*   Picks Management (Firestore): [ ] Create/update pick documents.
+*   Race Data Fetching: [x] Fetch races, horses, picks, results from Firestore where needed.
+*   Picks Management (Firestore): [x] Create/update pick documents.
 *   Horse Management (Firestore): [ ] CRUD operations on `horses` collection.
 *   Results & Winner Calculation: [ ] Update race status/results in Firestore. [ ] Implement `calculateRaceWinner` logic. [ ] Update `ResultsPage` to display.
 
