@@ -8,6 +8,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Helper: Is the user an Admin?
+    // Reads the user's document to check the isAdmin flag.
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
     // --- User Profiles ---
     match /users/{userId} {
       // Any signed-in user can read any profile.
@@ -20,16 +26,16 @@ service cloud.firestore {
     match /races/{raceId} {
       // Any signed-in user can read race info.
       allow read: if isSignedIn();
-      // Write access is denied. Manage races via console or admin SDK.
-      allow write: if false;
+      // Only admins can write (create/update/delete) races.
+      allow write: if isAdmin();
     }
 
     // --- Horses Collection (Root Level) ---
     match /horses/{horseId} {
       // Any signed-in user can read horse info.
       allow read: if isSignedIn();
-      // Write access is denied. Manage horses via console or admin SDK.
-      allow write: if false;
+      // Only admins can write (create/update/delete) horses.
+      allow write: if isAdmin();
     }
 
     // --- Picks Collection (Root Level) ---
@@ -45,8 +51,8 @@ service cloud.firestore {
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid
                       && request.resource.data.userId == resource.data.userId; // Prevent changing owner
 
-      // Delete access is denied.
-      allow delete: if false;
+      // Admins can delete picks (e.g., problematic entries), users cannot.
+      allow delete: if isAdmin();
     }
   }
 }

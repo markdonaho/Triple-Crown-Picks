@@ -81,10 +81,10 @@ Objective: Build UI and logic for race selection, horse management, picks submis
 
 **Pages/Components Implementation:**
 *   Home Page (`<HomePage>`):
-    *   [ ] Display upcoming races, links.
+    *   [x] Display upcoming races, links.
 *   Horse Management Page (`<HorseAdminPage>`, `/admin/horses`) - *Admin Only*:
-    *   [ ] List, add, edit, remove horses.
-    *   [ ] Associate with races.
+    *   [x] List, add, edit, remove horses.
+    *   [x] Associate with races.
 *   Picks Page (`<PicksPage>`, `/picks/:raceId`):
     *   [x] Implement `RaceSelector` logic (fetch races).
     *   [x] Fetch horses for the selected race.
@@ -92,16 +92,16 @@ Objective: Build UI and logic for race selection, horse management, picks submis
     *   [x] Implement `PicksDisplay` logic (fetch horse names).
     *   [x] Fetch race `status` to control form.
 *   Results Page (`<ResultsPage>`, `/results/:raceId`):
-    *   [ ] Implement `RaceSelector` logic.
-    *   [ ] Implement `ResultsAdminForm` (Admin Only) to set race `status` and results in Firestore.
-    *   [ ] Implement `ResultsDisplay` logic (fetch official results, horse names).
-    *   [ ] Implement `WinnerDisplay` logic (trigger/display winner calculation).
+    *   [x] Implement `RaceSelector` logic.
+    *   [x] Implement `ResultsAdminForm` (Admin Only) to set race `status` and results in Firestore.
+    *   [x] Implement `ResultsDisplay` logic (fetch official results, horse names).
+    *   [x] Implement `WinnerDisplay` logic (trigger/display winner calculation).
 
 **Logic Implementation:**
 *   Race Data Fetching: [x] Fetch races, horses, picks, results from Firestore where needed.
 *   Picks Management (Firestore): [x] Create/update pick documents.
-*   Horse Management (Firestore): [ ] CRUD operations on `horses` collection.
-*   Results & Winner Calculation: [ ] Update race status/results in Firestore. [ ] Implement `calculateRaceWinner` logic. [ ] Update `ResultsPage` to display.
+*   Horse Management (Firestore): [x] CRUD operations on `horses` collection.
+*   Results & Winner Calculation: [x] Update race status/results in Firestore. [x] Implement `calculateRaceWinner` logic. [x] Update `ResultsPage` to display.
 
 **Phase 4: API Integration**
 *   [ ] Integrate API for horse lists/results (if feasible).
