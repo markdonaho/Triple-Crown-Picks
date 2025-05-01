@@ -3,19 +3,21 @@
 **Overview**
 This plan outlines the development of a web app for a family to make picks (1st, 2nd, 3rd) for the three Triple Crown races (Kentucky Derby, Preakness Stakes, Belmont Stakes). The app will allow users to manage their picks until a race is locked, manage a horse list per race, and determine winners by comparing picks to actual results. It uses React for the frontend and Firebase (Firestore, Authentication, Hosting) for the backend and deployment.
 
-**Phase 1: Project Setup (Completed)**
-*   Local React project initialized using Vite (`triple-crown-picks`).
-*   Dependencies installed: `react`, `firebase`, `react-router-dom`.
-*   Folder structure created: `src/components`, `src/pages`, `src/services`, `src/styles`.
-*   Local Git repository initialized and initial commit made.
-*   GitHub repository created by user.
-*   Firebase project configured (Firestore, Authentication with email/password & Google, Hosting).
-*   Firebase CLI initialized within the project.
-*   Firebase config added to `.env` file (handled by user).
-*   `.gitignore` file created.
-*   _(Next Steps: Configure ESLint/Prettier if desired, set up IDE)_
+**(Status markers: [TODO], [IN PROGRESS], [DONE])**
 
-**Phase 2: Database Design (Firestore)**
+**Phase 1: Project Setup [DONE]**
+*   [DONE] Local React project initialized using Vite (`triple-crown-picks`).
+*   [DONE] Dependencies installed: `react`, `firebase`, `react-router-dom`.
+*   [DONE] Folder structure created: `src/components`, `src/pages`, `src/services`, `src/styles`, `src/hooks`.
+*   [DONE] Local Git repository initialized and initial commit made.
+*   [DONE] GitHub repository created by user.
+*   [DONE] Firebase project configured (Firestore, Authentication with email/password & Google, Hosting).
+*   [DONE] Firebase CLI initialized within the project.
+*   [DONE] Firebase config added to `.env` file (handled by user).
+*   [DONE] `.gitignore` file created.
+*   [DONE] Firebase services initialized in `src/services/firebase.js`.
+
+**Phase 2: Database Design (Firestore) [DONE - Conceptual]**
 Objective: Design Firestore collections to store race information, horses, user picks, and user data, supporting multiple races and editable picks.
 
 **Collections:**
@@ -61,7 +63,74 @@ Objective: Design Firestore collections to store race information, horses, user 
         *   `submittedAt`: Timestamp
         *   `updatedAt`: Timestamp (For tracking edits)
 
-**Firestore Rules (Conceptual):**
+**Firestore Rules (Conceptual):** [TODO - Needs implementation & testing]
+*(See conceptual rules below - requires deployment and testing)*
+
+**Phase 3: Frontend Development (React) [IN PROGRESS]**
+Objective: Build UI and logic for race selection, horse management, picks submission/editing, results display, and winner calculation.
+
+**Core Structure & Routing: [DONE]**
+*   [DONE] React Router (`react-router-dom`) setup in `App.jsx`.
+*   [DONE] Main `Layout` component established.
+*   [DONE] `Navbar` component created (`src/components/Navbar.jsx`) with basic links and auth-aware display (using `useAuth`).
+*   [DONE] Placeholder pages created for `HomePage`, `PicksPage`, `ResultsPage`, `HorseAdminPage`, `LoginPage`, `SignupPage`, `NotFoundPage`.
+*   [DONE] Placeholder components created for `RaceSelector`, `PicksForm`, `PicksDisplay`, `ResultsAdminForm`, `ResultsDisplay`, `WinnerDisplay`.
+*   [DONE] Protected routes implemented using `ProtectedRoute` component.
+
+**Authentication: [IN PROGRESS]**
+*   [DONE] `useAuth` hook (`src/hooks/useAuth.js`) created to manage Firebase Auth state and check `isAdmin` status from Firestore.
+*   [DONE] Implement Login Page (`<LoginPage>`) with Firebase email/password sign-in.
+*   [DONE] Implement Signup Page (`<SignupPage>`) with Firebase email/password sign-up & Firestore user document creation.
+*   [TODO] Implement Google Sign-in (Optional).
+*   [DONE] Store user data (including `isAdmin`) in `users` collection on signup.
+
+**Pages/Components Implementation: [TODO]**
+*   Home Page (`<HomePage>`): [TODO] Display upcoming races, links.
+*   Horse Management Page (`<HorseAdminPage>`, `/admin/horses`) - *Admin Only*: [TODO] List, add, edit, remove horses. Associate with races.
+*   Picks Page (`<PicksPage>`, `/picks/:raceId`):
+    *   [TODO] Implement `RaceSelector` logic (fetch races).
+    *   [TODO] Fetch horses for the selected race.
+    *   [TODO] Implement `PicksForm` logic (fetch/pre-fill user picks, handle submit/update to Firestore based on race `status`).
+    *   [TODO] Implement `PicksDisplay` logic (fetch horse names).
+    *   [TODO] Fetch race `status` to control form.
+*   Results Page (`<ResultsPage>`, `/results/:raceId`):
+    *   [TODO] Implement `RaceSelector` logic.
+    *   [TODO] Implement `ResultsAdminForm` (Admin Only) to set race `status` and results in Firestore.
+    *   [TODO] Implement `ResultsDisplay` logic (fetch official results, horse names).
+    *   [TODO] Implement `WinnerDisplay` logic (trigger/display winner calculation).
+*   Admin Roles: [DONE] `useAuth` hook checks `isAdmin`. `ProtectedRoute` enforces admin access.
+
+**Logic Implementation: [TODO]**
+*   Race Data Fetching: [TODO] Fetch races, horses, picks, results from Firestore where needed.
+*   Picks Management (Firestore): [TODO] Create/update pick documents.
+*   Horse Management (Firestore): [TODO] CRUD operations on `horses` collection.
+*   Results & Winner Calculation: [TODO] Update race status/results in Firestore. Implement `calculateRaceWinner` logic (likely triggered after results are set, potentially via Cloud Function or client-side). Update `ResultsPage` to display.
+
+**Phase 4: API Integration [TODO - Optional]**
+*   Objective: Integrate API for horse lists/results (if feasible).
+*   Status: Still dependent on finding a suitable free/paid API.
+*   Revised Plan: Focus on manual entry first. API integration is optional.
+
+**Phase 5: Testing [TODO]**
+*   Unit Tests: [TODO] `calculateRaceWinner` function, Firestore rule logic (using emulator).
+*   Integration Tests: [TODO] Auth flows, pick submission/update based on race status, admin actions.
+*   User Testing: [TODO] Test pick editing/locking, multi-race navigation, admin controls, responsive design.
+
+**Phase 6: Deployment [TODO]**
+*   Objective: Deploy to Firebase Hosting.
+*   Tasks: `npm run build`, `firebase deploy --only hosting`.
+
+**Phase 7: Post-Derby Usage (Extended Workflow) [Conceptual]**
+*   Workflow applies to each Triple Crown race:
+    1.  Admin creates Race document, sets status to `upcoming`.
+    2.  Admin adds/associates horses for that race.
+    3.  Admin sets status to `open`.
+    4.  Users submit/edit picks for that race.
+    5.  Admin sets status to `locked` just before the race.
+    6.  After the race, Admin sets `results` and status to `finished`.
+    7.  App calculates and displays winners for that specific race.
+
+--- Firestore Rules (Conceptual - Requires Implementation & Testing) ---
 rules_version = '2';
 service cloud.firestore {
 match /databases/{database}/documents {
@@ -99,84 +168,3 @@ allow delete: if request.auth != null && get(/databases/$(database)/documents/us
 }
 }
 }
-*(Note: These rules need refinement and testing)*
-
-**Phase 3: Frontend Development (React)**
-Objective: Build UI and logic for race selection, horse management, picks submission/editing, results display, and winner calculation.
-
-**Pages/Components:**
-
-*   Auth Pages (`<AuthForm>`, `/login`, `/signup`) - *Mostly unchanged*
-*   Home Page (`<Home>`) - Display upcoming races, link to race-specific pages or a general picks page.
-*   Race Selection Page (Optional, or integrated into Home/Navbar) - List races (`Kentucky Derby`, `Preakness`, `Belmont`) to navigate to.
-*   Horse Management Page (`<HorseAdmin>`, `/admin/horses`) - *Admin Only*. List horses, add/edit/remove horses, associate horses with races. Filter by race.
-*   Picks Page (`<PicksInterface>`, `/picks/:raceId`) -
-    *   Dropdown/Selector for Race (`Kentucky Derby`, `Preakness`, `Belmont`).
-    *   Fetches horses for the selected race.
-    *   Form to select 1st, 2nd, 3rd horses.
-    *   Displays user's current picks for that race.
-    *   Submit/Update button enabled only if race `status` is `upcoming` or `open`. Disabled if `locked` or `finished`.
-    *   Components: `<RaceSelector>`, `<PicksForm>`, `<PicksDisplay>`
-*   Results Page (`<ResultsInterface>`, `/results/:raceId`) -
-    *   Selector for Race.
-    *   Form for Admin to set race `status` (`upcoming`, `open`, `locked`, `finished`).
-    *   Form for Admin to input 1st, 2nd, 3rd results.
-    *   Displays official results for the selected race.
-    *   Displays calculated winner(s) for the selected race.
-    *   Components: `<RaceSelector>`, `<ResultsAdminForm>`, `<ResultsDisplay>`, `<WinnerDisplay>`
-*   Navbar (`<Navbar>`) - Links to Home, Picks, Results. Admin links (Horse Management). User info/logout.
-
-**Logic:**
-
-*   Authentication: Use Firebase Auth. Protect routes. Store user data (including `isAdmin`) in `users` collection.
-*   Admin Roles: Check `isAdmin` field from the user's profile in Firestore to control access to admin pages/features.
-*   Race Data: Fetch races from Firestore. Use race `status` to control UI elements (e.g., enable/disable pick submission).
-*   Horse Management (Admin): CRUD operations on `horses` collection. Manage `raceIds` array.
-*   Picks Management:
-    *   Fetch horses based on selected `raceId`.
-    *   Fetch user's existing pick for the selected `raceId`.
-    *   On submit/update: Check race `status`. Create/update pick document in `picks` collection (with `userId`, `raceId`, `updatedAt`). Validate unique horse selections.
-*   Results & Winner Calculation:
-    *   Admin sets results in the relevant `races` document.
-    *   Admin updates race `status` to `locked` before the race, `finished` after results.
-    *   Winner Calculation (per race): Fetch all `picks` for the finished `raceId`. Fetch the `results` from the `races` document. Apply scoring logic.
-        *   `calculateRaceWinner(raceId)`:
-            *   GET `results` for `raceId`
-            *   GET all `picks` where `raceId` matches
-            *   FOR each `pick`: calculate score based on `results` (e.g., 3 points for 1st, 2 for 2nd, 1 for 3rd; maybe bonus for exact order).
-            *   GROUP scores by `userId`
-            *   RETURN `userId`(s) with the highest score.
-
-**Phase 4: API Integration**
-*   Objective: Integrate API for horse lists/results (if feasible).
-*   Status: Still dependent on finding a suitable free/paid API.
-*   Revised Plan: Focus on manual entry first. API integration is optional. Admins will manually add horses to the `horses` collection and associate them with races (`raceIds`). Admins will manually update race `status` and `results`.
-
-**Phase 5: Testing**
-*   Unit Tests: `calculateRaceWinner` function, Firestore rule logic (using emulator).
-*   Integration Tests: Auth flows, pick submission/update based on race status, admin actions.
-*   User Testing: Test pick editing/locking, multi-race navigation, admin controls, responsive design.
-
-**Phase 6: Deployment**
-*   Objective: Deploy to Firebase Hosting.
-*   Tasks: `npm run build`, `firebase deploy --only hosting`.
-
-**Phase 7: Post-Derby Usage (Extended)**
-*   Workflow applies to each Triple Crown race:
-    1.  Admin creates Race document (e.g., `preakness-2025`), sets status to `upcoming`.
-    2.  Admin adds/associates horses for that race.
-    3.  Admin sets status to `open`.
-    4.  Users submit/edit picks for that race.
-    5.  Admin sets status to `locked` just before the race.
-    6.  After the race, Admin sets `results` and status to `finished`.
-    7.  App calculates and displays winners for that specific race.
-
-**Key Changes from Original Plan:**
-*   `races` collection to manage multiple events.
-*   `raceId` field added to `horses` (as an array) and `picks`.
-*   `status` field in `races` to control pick editing (`upcoming`, `open`, `locked`, `finished`).
-*   `isAdmin` field in `users` for role-based access control.
-*   Firestore rules updated for multi-race structure and edit permissions based on race status.
-*   Frontend logic adjusted for selecting races and handling status-dependent UI.
-*   Winner calculation is now per-race.
-*   API integration is de-prioritized in favor of manual admin controls.

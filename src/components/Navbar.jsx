@@ -1,0 +1,50 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth'; // Import the hook
+
+function Navbar() {
+  const { user, isAdmin, loading, logout } = useAuth(); // Use the hook
+
+  // Don't render until auth state is determined to avoid flickering
+  if (loading) {
+    return (
+      <nav style={{ padding: '1rem', borderBottom: '1px solid #ccc', marginBottom: '1rem' }}>
+        Loading...
+      </nav>
+    );
+  }
+
+  return (
+    <nav style={{ padding: '1rem', borderBottom: '1px solid #ccc', marginBottom: '1rem' }}>
+      <Link to="/" style={{ marginRight: '1rem' }}>Home</Link>
+      {/* Show Picks/Results only if logged in, could adjust this rule */}
+      {user && (
+        <>
+          <Link to="/picks" style={{ marginRight: '1rem' }}>Picks</Link>
+          <Link to="/results" style={{ marginRight: '1rem' }}>Results</Link>
+        </>
+      )}
+
+      {/* Show Admin link only if user is admin */}
+      {user && isAdmin && (
+        <Link to="/admin/horses" style={{ marginRight: '1rem' }}>Manage Horses</Link>
+      )}
+
+      <span style={{ float: 'right' }}>
+        {user ? (
+          <>
+            <span style={{marginRight: '1rem'}}>Welcome, {user.displayName || user.email}</span>
+            <button onClick={logout}>Logout</button> {/* Use logout from hook */}
+          </>
+        ) : (
+          <>
+            <Link to="/login" style={{ marginRight: '0.5rem' }}>Login</Link>
+            <Link to="/signup">Sign Up</Link>
+          </>
+        )}
+      </span>
+    </nav>
+  );
+}
+
+export default Navbar; 
