@@ -27,7 +27,10 @@ function Navbar() {
 
       {/* Show Admin link only if user is admin */}
       {user && isAdmin && (
-        <Link to="/admin/horses" style={{ marginRight: '1rem' }}>Manage Horses</Link>
+        <>
+          <Link to="/admin/horses" style={{ marginRight: '1rem' }}>Manage Horses</Link>
+          <Link to="/admin/races" style={{ marginRight: '1rem' }}>Manage Races</Link>
+        </>
       )}
 
       <span style={{ float: 'right' }}>

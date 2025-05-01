@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getFirestore, collection, getDocs, getDoc, doc, query, where, orderBy, limit, setDoc, serverTimestamp } from 'firebase/firestore'; // Import Firestore functions
 import { useAuth } from '../hooks/useAuth'; // Import useAuth
@@ -6,6 +6,16 @@ import { db } from '../services/firebase'; // Import db instance
 import RaceSelector from '../components/RaceSelector';
 import PicksForm from '../components/PicksForm';
 import PicksDisplay from '../components/PicksDisplay';
+
+// Helper function to sort horses
+const sortHorsesByPost = (horsesToSort) => {
+    if (!horsesToSort) return [];
+    return [...horsesToSort].sort((a, b) => {
+        const posA = typeof a.postPosition === 'number' ? a.postPosition : Infinity;
+        const posB = typeof b.postPosition === 'number' ? b.postPosition : Infinity;
+        return posA - posB;
+    });
+};
 
 function PicksPage() {
   const { raceId: initialRaceId } = useParams();
@@ -24,6 +34,9 @@ function PicksPage() {
   const [errorRaceDetails, setErrorRaceDetails] = useState(null); // Placeholder
   const [isSubmitting, setIsSubmitting] = useState(false); // State for submission loading
   const [submitError, setSubmitError] = useState(null); // State for submission error
+
+  // Memoize the sorted horses list
+  const sortedHorses = useMemo(() => sortHorsesByPost(horses), [horses]);
 
   useEffect(() => {
     setSelectedRaceId(initialRaceId || '');
@@ -182,13 +195,10 @@ function PicksPage() {
       const updatedPickData = {
           ...dataToSave,
           id: docRef.id,
-          // Simulate timestamps locally (replace if using real-time updates)
-          submittedAt: dataToSave.submittedAt || currentPicks?.submittedAt || new Date(), 
-          updatedAt: new Date() 
+          // Use JS Dates for immediate local feedback. PicksDisplay will handle conversion.
+          submittedAt: (currentPicks?.submittedAt?.toDate ? currentPicks.submittedAt.toDate() : null) || new Date(), // Use previous or now
+          updatedAt: new Date() // Always use now for updated
       };
-      // Convert server timestamps to local Date objects for immediate display
-      if (updatedPickData.submittedAt?.toDate) updatedPickData.submittedAt = updatedPickData.submittedAt.toDate();
-      if (updatedPickData.updatedAt?.toDate) updatedPickData.updatedAt = updatedPickData.updatedAt.toDate();
       
       setCurrentPicks(updatedPickData);
 
@@ -240,6 +250,37 @@ function PicksPage() {
           {!loadingRaceDetails && !errorRaceDetails && (
             <>
               <p>Status: {raceStatus || 'Loading...'}</p>
+
+              {/* Horse Details Table */} 
+              <div className="my-8">
+                <h3 className="text-xl font-semibold mb-4">Entries</h3>
+                {sortedHorses.length > 0 ? (
+                  <div className="overflow-x-auto shadow-md rounded-lg">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PP</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horse</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Odds</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {sortedHorses.map((horse) => (
+                          <tr key={horse.id}>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{horse.postPosition ?? 'N/A'}</td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{horse.name}</td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{horse.odds ?? 'N/A'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p>No horses entered for this race yet.</p>
+                )}
+              </div>
+              {/* End Horse Details Table */}
+
               <PicksDisplay picks={currentPicks} horses={horses} />
 
               {canEditPicks ? (

@@ -14,6 +14,7 @@ import ResultsPage from './pages/ResultsPage';
 import LoginPage from './pages/LoginPage'; // Import real component
 import SignupPage from './pages/SignupPage'; // Import real component
 import HorseAdminPage from './pages/HorseAdminPage'; // Placeholder
+import RaceAdminPage from './pages/RaceAdminPage'; // <-- Add this line
 // import NotFoundPage from './pages/NotFoundPage'; // Placeholder
 import { useAuth } from './hooks/useAuth'; // Import the real hook
 
@@ -81,6 +82,16 @@ function App() {
             element={(
               <ProtectedRoute adminOnly={true}>
                 <HorseAdminPage />
+              </ProtectedRoute>
+            )}
+          />
+
+          {/* <-- Add this new route block --> */}
+          <Route 
+            path="admin/races" 
+            element={(
+              <ProtectedRoute adminOnly={true}>
+                <RaceAdminPage />
               </ProtectedRoute>
             )}
           />

@@ -81,13 +81,17 @@ Objective: Build UI and logic for race selection, horse management, picks submis
 
 **Pages/Components Implementation:**
 *   Home Page (`<HomePage>`):
-    *   [x] Display upcoming races, links.
+    *   [x] Automatically displays details (entries, odds, all user picks) for races that are 'open' or running 'today'.
+    *   [x] Lists all races with links to their respective picks pages.
 *   Horse Management Page (`<HorseAdminPage>`, `/admin/horses`) - *Admin Only*:
     *   [x] List, add, edit, remove horses.
     *   [x] Associate with races.
+*   Race Management Page (`<RaceAdminPage>`, `/admin/races`) - *Admin Only*:
+    *   [x] Create new races.
 *   Picks Page (`<PicksPage>`, `/picks/:raceId`):
     *   [x] Implement `RaceSelector` logic (fetch races).
     *   [x] Fetch horses for the selected race.
+    *   [x] Display table of horse details (PP, Name, Odds) sorted by PP.
     *   [x] Implement `PicksForm` logic (fetch/pre-fill user picks, handle submit/update to Firestore based on race `status`).
     *   [x] Implement `PicksDisplay` logic (fetch horse names).
     *   [x] Fetch race `status` to control form.
@@ -104,7 +108,7 @@ Objective: Build UI and logic for race selection, horse management, picks submis
 *   Results & Winner Calculation: [x] Update race status/results in Firestore. [x] Implement `calculateRaceWinner` logic. [x] Update `ResultsPage` to display.
 
 **Phase 4: API Integration**
-*   [ ] Integrate API for horse lists/results (if feasible).
+*   [ ] ~~Integrate API for horse lists/results (if feasible).~~ (Skipped)
 
 **Phase 5: Testing**
 *   Unit Tests:

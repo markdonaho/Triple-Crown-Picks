@@ -17,8 +17,15 @@ function PicksDisplay({ picks, horses = [] }) {
         <li>2nd: {getHorseName(picks.second)}</li>
         <li>3rd: {getHorseName(picks.third)}</li>
       </ul>
-      {picks.submittedAt && <p><small>Submitted: {new Date(picks.submittedAt?.toDate()).toLocaleString()}</small></p>}
-      {picks.updatedAt && <p><small>Last Updated: {new Date(picks.updatedAt?.toDate()).toLocaleString()}</small></p>}
+      {/* Handle both Firestore Timestamps and JS Dates */}
+      {picks.submittedAt && 
+        <p><small>Submitted: { 
+          new Date(picks.submittedAt.toDate ? picks.submittedAt.toDate() : picks.submittedAt).toLocaleString() 
+        }</small></p>}
+      {picks.updatedAt && 
+        <p><small>Last Updated: { 
+          new Date(picks.updatedAt.toDate ? picks.updatedAt.toDate() : picks.updatedAt).toLocaleString() 
+        }</small></p>}
     </div>
   );
 }
