@@ -15,6 +15,7 @@ import LoginPage from './pages/LoginPage'; // Import real component
 import SignupPage from './pages/SignupPage'; // Import real component
 import HorseAdminPage from './pages/HorseAdminPage'; // Placeholder
 import RaceAdminPage from './pages/RaceAdminPage'; // <-- Add this line
+import ScoringExplanation from './components/ScoringExplanation'; // <-- Import the new component
 // import NotFoundPage from './pages/NotFoundPage'; // Placeholder
 import { useAuth } from './hooks/useAuth'; // Import the real hook
 
@@ -32,9 +33,10 @@ function Layout() {
   return (
     <>
       <Navbar />
-      <main style={{ padding: '0 1rem' }}> {/* Add some padding */}
+      <main style={{ padding: '0 1rem', minHeight: 'calc(100vh - 100px)' }}> {/* Add minHeight & adjust padding */}
         <Outlet /> {/* Nested routes will render here */}
       </main>
+      <ScoringExplanation /> {/* <-- Add the component here */}
     </>
   );
 }
