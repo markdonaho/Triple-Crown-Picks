@@ -144,7 +144,7 @@ function HomePage() {
             const racePicks = picksByRace[race.id] || [];
 
             return (
-              <div key={race.id} className="p-6 border border-gray-200 rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-200">
+              <div key={race.id} className="p-6 rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-200">
                 <div className="flex justify-between items-start mb-3">
                     <h3 className="text-xl font-semibold text-gray-800">{race.name}</h3>
                     <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
@@ -159,9 +159,8 @@ function HomePage() {
                 </div>
 
                 <div className="mb-6 flex justify-center">
-                    <h4 className="text-lg font-medium mb-2 text-gray-700">Entries</h4>
                     {sortedRaceHorses.length > 0 ? (
-                        <div className="overflow-x-auto border border-gray-200 rounded-md shadow-sm">
+                        <div className="overflow-x-auto rounded-md shadow-sm">
                         <table className="min-w-full divide-y divide-gray-200 text-sm">
                             <thead className="bg-gray-100">
                             <tr>
@@ -191,7 +190,7 @@ function HomePage() {
                     {racePicks.length > 0 ? (
                     <ul className="space-y-2 text-sm list-none pl-0">
                         {racePicks.map(pick => (
-                        <li key={pick.id} className="p-2 bg-gray-50 rounded border border-gray-100">
+                        <li key={pick.id} className="p-2 bg-gray-50 rounded">
                             <strong className="font-semibold text-gray-800">{getUserName(pick.userId)}:</strong>{' '}
                             <span className="text-gray-600">
                             {getHorseName(pick.first)} / {getHorseName(pick.second)} / {getHorseName(pick.third)}
@@ -217,7 +216,7 @@ function HomePage() {
           <ul className="space-y-3 list-none pl-0">
             {allRaces.length > 0 ? (
               allRaces.map(race => (
-                <li key={race.id} className="p-3 bg-white rounded-md shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors duration-150">
+                <li key={race.id} className="p-3 bg-white rounded-md shadow-sm hover:bg-blue-50 transition-colors duration-150">
                   <Link to={`/picks/${race.id}`} className="flex justify-between items-center text-blue-700 hover:text-blue-900 group">
                     <div>
                         <span className="font-medium group-hover:underline">{race.name}</span>

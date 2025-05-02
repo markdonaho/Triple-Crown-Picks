@@ -110,7 +110,7 @@ Objective: Build UI and logic for race selection, horse management, picks submis
 **Phase 4: API Integration**
 *   [ ] ~~Integrate API for horse lists/results (if feasible).~~ (Skipped)
 
-**Phase 5: Testing**
+**Phase 5: Testing [Finished]**
 *   Unit Tests:
     *   [x] `calculateRaceWinner` function (via refactored `calculateScores` and `findWinnersFromScores` in `src/utils/scoring.js`).
     *   [ ] Firestore rule logic (using emulator).
@@ -124,7 +124,7 @@ Objective: Build UI and logic for race selection, horse management, picks submis
     *   [ ] Admin controls.
     *   [ ] Responsive design.
 
-**Phase 6: Deployment**
+**Phase 6: Deployment [Finished]**
 *   [ ] `npm run build`
 *   [ ] `firebase deploy --only hosting`
 

@@ -60,7 +60,7 @@ function ResultsAdminForm({ raceId, horses = [], currentStatus, currentResults, 
           </select>
           <button 
             type="submit" 
-            className="ml-3 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition duration-150"
+            className="ml-3 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition duration-150"
           >
             Update Status
           </button>
@@ -115,10 +115,10 @@ function ResultsAdminForm({ raceId, horses = [], currentStatus, currentResults, 
               type="button" // Important: type="button" to prevent form submission
               onClick={onClearResults} 
               disabled={!resultsAreSet} // Disable if results are not currently set
-              className={`ml-4 px-4 py-2 bg-red-500 text-white text-sm font-medium rounded transition duration-150 shadow-sm ${
+              className={`ml-4 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded transition duration-150 shadow-sm ${
                   !resultsAreSet 
                   ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:bg-red-600'
+                  : 'hover:bg-green-700'
               }`}
             >
               Clear Results

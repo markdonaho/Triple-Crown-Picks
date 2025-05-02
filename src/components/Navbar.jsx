@@ -37,12 +37,17 @@ function Navbar() {
         {user ? (
           <>
             <span style={{marginRight: '1rem'}}>Welcome, {user.displayName || user.email}</span>
-            <button onClick={logout}>Logout</button> {/* Use logout from hook */}
+            <button 
+              onClick={logout} 
+              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition duration-150"
+            >
+              Logout
+            </button>
           </>
         ) : (
           <>
-            <Link to="/login" style={{ marginRight: '0.5rem' }}>Login</Link>
-            <Link to="/signup">Sign Up</Link>
+            <Link to="/login" className="text-gray-700 hover:text-blue-600">Login</Link>
+            <Link to="/signup" className="text-blue-600 hover:underline">Sign Up</Link>
           </>
         )}
       </span>

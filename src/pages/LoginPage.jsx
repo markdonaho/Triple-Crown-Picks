@@ -79,12 +79,16 @@ function LoginPage() {
           />
         </div>
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit" disabled={loading}>
+        <button 
+          type="submit" 
+          disabled={loading}
+          className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150"
+        >
           {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
       <p>
-        Don't have an account? <Link to="/signup">Sign Up</Link>
+        Don't have an account? <Link to="/signup" className="text-blue-600 hover:underline">Sign Up</Link>
       </p>
       {/* TODO: Add Google Sign-in button */}
     </div>

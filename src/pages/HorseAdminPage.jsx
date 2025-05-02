@@ -232,7 +232,13 @@ function HorseAdminPage() {
             )}
           </div>
 
-        <button type="submit">Add Horse</button>
+        {/* Add Tailwind classes */}
+        <button 
+          type="submit" 
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition duration-150"
+        >
+          Add Horse
+        </button>
         {formError && <p style={{ color: 'red', marginTop: '0.5rem' }}>{formError}</p>}
       </form>
 
@@ -289,14 +295,27 @@ function HorseAdminPage() {
             )}
           </div>
 
-          <button type="submit">Update Horse</button>
-          <button type="button" onClick={() => { setEditHorseId(null); setFormError(null); }}>Cancel</button>
-           {formError && <p style={{ color: 'red', marginTop: '0.5rem' }}>{formError}</p>}
+          {/* Add Tailwind classes */}
+          <button 
+            type="submit" 
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 mr-2 transition duration-150"
+          >
+            Update Horse
+          </button>
+          {/* Add Tailwind classes */}
+          <button 
+            type="button" // Prevent form submission
+            onClick={() => setEditHorseId(null)} // Simple cancel action
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition duration-150"
+          >
+            Cancel
+          </button>
+          {formError && <p style={{ color: 'red', marginTop: '0.5rem' }}>{formError}</p>}
         </form>
       )}
 
       {/* Horse List */}
-      <h2>Existing Horses</h2>
+      <h2 className="text-xl font-semibold mt-8 mb-4">Existing Horses</h2>
       {loading && <p>Loading horses...</p>}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       {!loading && !error && horses.length === 0 ? (
@@ -304,16 +323,28 @@ function HorseAdminPage() {
       ) : !loading && !error ? (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {horses.map(horse => (
-            <li key={horse.id} style={{ borderBottom: '1px solid #eee', padding: '0.5rem 0' }}>
-              <strong>{horse.name}</strong>
-              {horse.postPosition != null && <span> (Post: {horse.postPosition})</span>} {/* Check for null/undefined */}
-              {horse.odds && <span style={{ marginLeft: '1rem' }}>Odds: {horse.odds}</span>}
-              <br /> {/* Added line break */}
-              <small style={{ marginLeft: '1rem' }}>Races: {getRaceNames(horse.raceIds)}</small> {/* Display associated races */}
-              <span style={{ float: 'right' }}> {/* Align buttons to the right */} 
-                <button onClick={() => handleEditHorse(horse)} style={{ marginLeft: '1rem' }}>Edit</button>
-                <button onClick={() => handleDeleteHorse(horse.id)} style={{ marginLeft: '0.5rem' }}>Delete</button>
+            <li key={horse.id} style={{ borderBottom: '1px solid #eee', padding: '0.5rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>
+                <strong>{horse.name}</strong> (PP: {horse.postPosition ?? 'N/A'}, Odds: {horse.odds || 'N/A'}) - Races: {getRaceNames(horse.raceIds)}
               </span>
+              <div>
+                {/* Add Tailwind classes */}
+                <button 
+                  onClick={() => handleEditHorse(horse)} 
+                  className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 mr-2 transition duration-150"
+                  disabled={!!editHorseId} // Disable if another edit is in progress
+                >
+                  Edit
+                </button>
+                {/* Add Tailwind classes */}
+                <button 
+                  onClick={() => handleDeleteHorse(horse.id)} 
+                  className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50 transition duration-150" 
+                  disabled={!!editHorseId} // Disable if an edit is in progress
+                >
+                  Delete
+                </button>
+              </div>
             </li>
           ))}
         </ul>

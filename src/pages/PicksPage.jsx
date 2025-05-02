@@ -255,25 +255,27 @@ function PicksPage() {
               <div className="my-8">
                 <h3 className="text-xl font-semibold mb-4">Entries</h3>
                 {sortedHorses.length > 0 ? (
-                  <div className="overflow-x-auto shadow-md rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PP</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horse</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Odds</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {sortedHorses.map((horse) => (
-                          <tr key={horse.id}>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{horse.postPosition ?? 'N/A'}</td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{horse.name}</td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{horse.odds ?? 'N/A'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="mb-6 flex justify-center">
+                    <div className="overflow-x-auto rounded-md shadow-sm">
+                        <table className="divide-y divide-gray-200 text-sm">
+                            <thead className="bg-gray-100">
+                                <tr>
+                                    <th className="px-2 py-2 text-center font-semibold text-gray-600 uppercase tracking-wider">PP</th>
+                                    <th className="px-2 py-2 text-center font-semibold text-gray-600 uppercase tracking-wider">Horse</th>
+                                    <th className="px-2 py-2 text-center font-semibold text-gray-600 uppercase tracking-wider">Odds</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {sortedHorses.map((horse, index) => (
+                                    <tr key={horse.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                        <td className="px-2 py-2 whitespace-nowrap font-medium text-gray-900 text-center">{horse.postPosition ?? '-'}</td>
+                                        <td className="px-2 py-2 whitespace-nowrap text-gray-700 text-center">{horse.name}</td>
+                                        <td className="px-2 py-2 whitespace-nowrap text-gray-500 text-center">{horse.odds ?? '-'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                   </div>
                 ) : (
                   <p>No horses entered for this race yet.</p>

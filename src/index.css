@@ -1,11 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Define Color Variables */
+  --main-bg-color: #ffffff; /* White */
+  --main-text-color: #1f2937; /* gray-900 */
+  --button-bg-color: #000000; /* Black */
+  --button-text-color: #ffffff; /* White */
+  --button-hover-bg-color: #374151; /* gray-700 (example hover) */
+  --link-color: #2563eb; /* blue-600 */
+  --link-hover-color: #1d4ed8; /* blue-700 */
+  --subtle-bg-color: #f9fafb; /* gray-50 */
+
+  /* color-scheme: light dark; */ /* Removed */
+  color: var(--main-text-color); /* Use variable */
+  background-color: var(--main-bg-color); /* Use variable */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,14 +29,15 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--link-color); /* Use variable */
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: var(--link-hover-color); /* Use variable */
 }
 
 body {
+  /* Styles moved to :root or applied directly */
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
@@ -33,34 +48,49 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
+/* --- Global Button Styles --- */
+button,
+input[type="submit"],
+input[type="button"] {
+  border-radius: 6px; /* Slightly smaller radius than default */
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out; /* Adjusted transition */
+  
+  /* Apply our custom button colors */
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover {
+  background-color: var(--button-hover-bg-color);
+  border-color: transparent; /* Keep border transparent on hover */
 }
+
+button:focus,
+button:focus-visible,
+input[type="submit"]:focus,
+input[type="submit"]:focus-visible,
+input[type="button"]:focus,
+input[type="button"]:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color; /* Keep default focus */
+}
+
+button:disabled,
+input[type="submit"]:disabled,
+input[type="button"]:disabled {
+  background-color: #9ca3af; /* gray-400 */
+  color: #e5e7eb; /* gray-200 */
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+/* --- End Global Button Styles --- */
+
+
+/* @media (prefers-color-scheme: light) { ... } */ /* Removed */

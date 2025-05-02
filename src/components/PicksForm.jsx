@@ -62,10 +62,14 @@ function PicksForm({ horses = [], initialPicks, onSubmit, raceStatus, isSubmitti
           {horses.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
         </select>
       </div>
-      <button type="submit" disabled={isDisabled}>
+      <button 
+        type="submit" 
+        disabled={isDisabled}
+        className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150"
+      >
         {isSubmitting ? 'Submitting...' : (initialPicks ? 'Update Picks' : 'Submit Picks')}
       </button>
-      {!canSubmit && <p>Picking is currently closed ({raceStatus}).</p>}
+      {!canSubmit && <p className="mt-2 text-sm text-red-600">Picking is currently closed ({raceStatus}).</p>}
     </form>
   );
 }
