@@ -17,7 +17,6 @@ function RaceSelector({ races = [], selectedRaceId, onSelectRace }) {
         ))}
       </select>
       {/* Display basic selected race info if needed */}
-      {selectedRaceId && <p>Selected: {selectedRaceId}</p>}
     </div>
   );
 }
