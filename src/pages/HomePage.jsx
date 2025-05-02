@@ -121,99 +121,126 @@ function HomePage() {
   }, [relevantPicks]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center">Welcome to Triple Crown Picks!</h1>
+    <div className="container mx-auto px-4 py-12">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-extrabold mb-2 tracking-tight text-gray-900 sm:text-5xl">
+          Welcome to Triple Crown Picks!
+        </h1>
+        <p className="text-lg text-gray-600">
+          Make your picks for the biggest races of the year.
+        </p>
+      </div>
 
-      {/* Section for automatically displayed races */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4 border-b pb-2">Today's Races & Open Picks</h2>
-        {loading && <p>Loading race data...</p>}
-        {error && <p className="text-red-500">{error}</p>}
+      <section className="mb-16 bg-gray-50 p-6 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-6 border-b pb-3 text-gray-800">Today's Races & Open Picks</h2>
+        {loading && <p className="text-center text-gray-500">Loading race data...</p>}
+        {error && <p className="text-center text-red-600 font-semibold">{error}</p>}
         {!loading && !error && relevantRaces.length === 0 && (
-          <p>No races currently open for picking or running today.</p>
+          <p className="text-center text-gray-500">No races currently open for picking or running today.</p>
         )}
-        {!loading && !error && relevantRaces.map(race => {
-          const sortedRaceHorses = getSortedHorsesForRace(race.id);
-          const racePicks = picksByRace[race.id] || [];
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {!loading && !error && relevantRaces.map(race => {
+            const sortedRaceHorses = getSortedHorsesForRace(race.id);
+            const racePicks = picksByRace[race.id] || [];
 
-          return (
-            <div key={race.id} className="mb-8 p-4 border rounded shadow-sm bg-white">
-              <h3 className="text-xl font-bold mb-3">{race.name} ({race.status})</h3>
-              
-              {/* Horse Table for this race */}
-              <h4 className="text-lg font-semibold mb-2">Entries</h4>
-              {sortedRaceHorses.length > 0 ? (
-                  <div className="overflow-x-auto shadow-md rounded-lg mb-4">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th className="px-3 py-2 text-left font-medium text-gray-600 uppercase tracking-wider">PP</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-600 uppercase tracking-wider">Horse</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-600 uppercase tracking-wider">Odds</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {sortedRaceHorses.map((horse) => (
-                          <tr key={horse.id}>
-                            <td className="px-3 py-2 whitespace-nowrap font-medium">{horse.postPosition ?? 'N/A'}</td>
-                            <td className="px-3 py-2 whitespace-nowrap">{horse.name}</td>
-                            <td className="px-3 py-2 whitespace-nowrap text-gray-600">{horse.odds ?? 'N/A'}</td>
-                          </tr>
+            return (
+              <div key={race.id} className="p-6 border border-gray-200 rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-200">
+                <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-xl font-semibold text-gray-800">{race.name}</h3>
+                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${
+                        race.status === 'open' ? 'bg-green-100 text-green-800' :
+                        race.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
+                        race.status === 'locked' ? 'bg-yellow-100 text-yellow-800' :
+                        race.status === 'finished' ? 'bg-gray-100 text-gray-800' :
+                        'bg-gray-100 text-gray-800'
+                    }`}>
+                        {race.status.toUpperCase()}
+                    </span>
+                </div>
+
+                <div className="mb-6 flex justify-center">
+                    <h4 className="text-lg font-medium mb-2 text-gray-700">Entries</h4>
+                    {sortedRaceHorses.length > 0 ? (
+                        <div className="overflow-x-auto border border-gray-200 rounded-md shadow-sm">
+                        <table className="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead className="bg-gray-100">
+                            <tr>
+                                <th className="px-4 py-2 text-center font-semibold text-gray-600 uppercase tracking-wider">PP</th>
+                                <th className="px-4 py-2 text-center font-semibold text-gray-600 uppercase tracking-wider">Horse</th>
+                                <th className="px-4 py-2 text-center font-semibold text-gray-600 uppercase tracking-wider">Odds</th>
+                            </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                            {sortedRaceHorses.map((horse, index) => (
+                                <tr key={horse.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                <td className="px-4 py-2 whitespace-nowrap font-medium text-gray-900 text-center">{horse.postPosition ?? '-'}</td>
+                                <td className="px-4 py-2 whitespace-nowrap text-gray-700 text-center">{horse.name}</td>
+                                <td className="px-4 py-2 whitespace-nowrap text-gray-500 text-center">{horse.odds ?? '-'}</td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                        </div>
+                    ) : (
+                        <p className="text-gray-500 italic">No horse entries available for this race yet.</p>
+                    )}
+                </div>
+
+                <div>
+                    <h4 className="text-lg font-medium mb-2 text-gray-700">Current Picks</h4>
+                    {racePicks.length > 0 ? (
+                    <ul className="space-y-2 text-sm list-none pl-0">
+                        {racePicks.map(pick => (
+                        <li key={pick.id} className="p-2 bg-gray-50 rounded border border-gray-100">
+                            <strong className="font-semibold text-gray-800">{getUserName(pick.userId)}:</strong>{' '}
+                            <span className="text-gray-600">
+                            {getHorseName(pick.first)} / {getHorseName(pick.second)} / {getHorseName(pick.third)}
+                            </span>
+                        </li>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-gray-500 mb-4">No horses found for this race.</p>
-              )}
-
-              {/* Picks List for this race */}
-              <h4 className="text-lg font-semibold mb-2">Current Picks</h4>
-              {racePicks.length > 0 ? (
-                <ul className="list-disc pl-5 space-y-1 text-sm">
-                  {racePicks.map(pick => (
-                    <li key={pick.id}>
-                      <strong>{getUserName(pick.userId)}:</strong>{' '}
-                      {getHorseName(pick.first)} / {getHorseName(pick.second)} / {getHorseName(pick.third)}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500">No picks submitted for this race yet.</p>
-              )}
-            </div>
-          );
-        })}
+                    </ul>
+                    ) : (
+                    <p className="text-gray-500 italic">No picks submitted for this race yet.</p>
+                    )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
-      {/* Section for selecting any race */}
-      <section>
-        <h2 className="text-2xl font-semibold mb-4 border-b pb-2">Select a Race to View/Pick</h2>
-        {loading && allRaces.length === 0 && <p>Loading races...</p>}
-        {error && allRaces.length === 0 && <p className="text-red-500">{error}</p>}
+      <section className="bg-gray-50 p-6 rounded-lg shadow mb-12">
+        <h2 className="text-2xl font-bold mb-6 border-b pb-3 text-gray-800">All Races</h2>
+        {loading && allRaces.length === 0 && <p className="text-center text-gray-500">Loading races...</p>}
+        {error && allRaces.length === 0 && <p className="text-center text-red-600 font-semibold">{error}</p>}
         {!loading && !error && (
-          <ul className="space-y-2">
+          <ul className="space-y-3 list-none pl-0">
             {allRaces.length > 0 ? (
               allRaces.map(race => (
-                <li key={race.id}>
-                  <Link to={`/picks/${race.id}`} className="text-blue-600 hover:underline">
-                    {race.name} - {race.date ? new Date(race.date.seconds * 1000).toLocaleDateString() : 'Date TBD'}
-                     ({race.status})
+                <li key={race.id} className="p-3 bg-white rounded-md shadow-sm border border-gray-200 hover:bg-blue-50 transition-colors duration-150">
+                  <Link to={`/picks/${race.id}`} className="flex justify-between items-center text-blue-700 hover:text-blue-900 group">
+                    <div>
+                        <span className="font-medium group-hover:underline">{race.name}</span>
+                        <span className="text-sm text-gray-500 ml-2"> - {race.date ? new Date(race.date.seconds * 1000).toLocaleDateString() : 'Date TBD'}</span>
+                    </div>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                        race.status === 'open' ? 'bg-green-100 text-green-800' :
+                        race.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
+                        race.status === 'locked' ? 'bg-yellow-100 text-yellow-800' :
+                        race.status === 'finished' ? 'bg-gray-100 text-gray-800' :
+                        'bg-gray-100 text-gray-800'
+                    }`}>
+                         {race.status.toUpperCase()}
+                    </span>
                   </Link>
                 </li>
               ))
             ) : (
-              <p>No races found.</p>
+              <p className="text-center text-gray-500">No races found.</p>
             )}
           </ul>
         )}
       </section>
-
-      {/* Keep links to other pages */}
-       <div className="text-center mt-8 space-x-4">
-          <Link to="/picks" className="text-blue-600 hover:underline">Go to Picks Page</Link>
-          <Link to="/results" className="text-blue-600 hover:underline">View Results Page</Link>
-      </div>
 
     </div>
   );
