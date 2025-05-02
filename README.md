@@ -112,7 +112,7 @@ Objective: Build UI and logic for race selection, horse management, picks submis
 
 **Phase 5: Testing**
 *   Unit Tests:
-    *   [ ] `calculateRaceWinner` function.
+    *   [x] `calculateRaceWinner` function (via refactored `calculateScores` and `findWinnersFromScores` in `src/utils/scoring.js`).
     *   [ ] Firestore rule logic (using emulator).
 *   Integration Tests:
     *   [ ] Auth flows.

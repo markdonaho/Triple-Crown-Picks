@@ -15,15 +15,10 @@ import {
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  deleteField
 } from 'firebase/firestore';
-
-// --- Scoring Configuration ---
-const POINTS_FIRST = 5;
-const POINTS_SECOND = 3;
-const POINTS_THIRD = 1;
-const POINTS_CORRECT_HORSE_WRONG_PLACE = 0.5;
-// ---------------------------
+import { calculateScores, findWinnersFromScores } from '../utils/scoring';
 
 function ResultsPage() {
   const { raceId: initialRaceId } = useParams();
@@ -57,10 +52,14 @@ function ResultsPage() {
   }, []);
 
   const calculateWinner = useCallback(async (raceIdToCalc, officialResultsToUse) => {
-    if (!raceIdToCalc || !officialResultsToUse) return null;
+    if (!raceIdToCalc || !officialResultsToUse || !officialResultsToUse.first || !officialResultsToUse.second || !officialResultsToUse.third) {
+        console.warn("Attempted to calculate winner with incomplete data:", raceIdToCalc, officialResultsToUse);
+        return null;
+    }
 
     setCalculatingWinner(true);
     setWinnerData(null); // Clear previous winner
+    setError(null); // Clear previous errors
     console.log("Calculating winner for", raceIdToCalc);
 
     try {
@@ -72,12 +71,11 @@ function ResultsPage() {
 
       if (picks.length === 0) {
         console.log("No picks found for this race.");
-        setCalculatingWinner(false);
+        setWinnerData([]); // Set winner data to empty array for display
         return []; // Return empty array if no picks
       }
 
-      // 2. Fetch all users (for display names - assuming small number of users)
-      // If many users, fetch individual names based on picks userIds later
+      // 2. Fetch all users (consider optimizing later if needed)
       const usersCollection = collection(db, 'users');
       const usersSnapshot = await getDocs(usersCollection);
       const usersMap = usersSnapshot.docs.reduce((acc, doc) => {
@@ -85,81 +83,26 @@ function ResultsPage() {
         return acc;
       }, {});
 
-      // 3. Calculate scores
-      const scores = {};
-      const winningHorses = new Set([
-          officialResultsToUse.first,
-          officialResultsToUse.second,
-          officialResultsToUse.third
-      ]);
+      // 3. Calculate scores using the utility function
+      const scores = calculateScores(picks, officialResultsToUse, usersMap);
+      console.log("Calculated scores:", scores);
 
-      picks.forEach(pick => {
-        let currentScore = 0;
-        const pickedHorses = [pick.first, pick.second, pick.third];
-
-        // Check exact matches first
-        if (pick.first === officialResultsToUse.first) {
-          currentScore += POINTS_FIRST;
-        } else if (winningHorses.has(pick.first)) { // Horse was in top 3, but wrong place
-            currentScore += POINTS_CORRECT_HORSE_WRONG_PLACE;
-        }
-
-        if (pick.second === officialResultsToUse.second) {
-          currentScore += POINTS_SECOND;
-        } else if (winningHorses.has(pick.second)) { // Horse was in top 3, but wrong place
-            currentScore += POINTS_CORRECT_HORSE_WRONG_PLACE;
-        }
-
-        if (pick.third === officialResultsToUse.third) {
-          currentScore += POINTS_THIRD;
-        } else if (winningHorses.has(pick.third)) { // Horse was in top 3, but wrong place
-            currentScore += POINTS_CORRECT_HORSE_WRONG_PLACE;
-        }
-
-        // Aggregate scores per user
-        scores[pick.userId] = (scores[pick.userId] || 0) + currentScore;
-      });
-
-      // 4. Find max score
-      let maxScore = -1; // Initialize to -1 to handle zero scores correctly
-      for (const userId in scores) {
-        if (scores[userId] > maxScore) {
-          maxScore = scores[userId];
-        }
-      }
-
-      // 5. Find all users with max score (handle ties)
-      const winners = [];
-      // Handle case where no one scored any points
-      if (maxScore <= 0 && Object.keys(scores).length > 0) {
-          // Option 1: Declare no winner (return empty array)
-          // Option 2: Declare everyone with 0 points a winner (if picks were made)
-          // Let's go with Option 1: No winner if max score is 0 or less
-          console.log("Maximum score was 0 or less. No winner declared.");
-      } else if (maxScore > 0) {
-          for (const userId in scores) {
-            if (scores[userId] === maxScore) {
-              winners.push({
-                userId: userId,
-                userName: usersMap[userId]?.displayName || `User (${userId.substring(0, 5)}...)`, // Get name from map
-                score: scores[userId],
-              });
-            }
-          }
-      }
-
+      // 4. Find winners using the utility function
+      const winners = findWinnersFromScores(scores, usersMap);
       console.log("Winner calculation complete:", winners);
+
       setWinnerData(winners); // Update state
       return winners; // Return the result
 
     } catch (err) {
       console.error("Error calculating winner:", err);
       setError('Failed to calculate winner.');
+      setWinnerData(null); // Ensure winner data is cleared on error
       return null; // Indicate error
     } finally {
         setCalculatingWinner(false);
     }
-  }, [setError]); // Include setError in dependencies
+  }, [setError]);
 
   const fetchRaceDetails = useCallback(async () => {
     if (!selectedRaceId) {
@@ -206,7 +149,7 @@ function ResultsPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedRaceId, calculateWinner, setError]); // Add calculateWinner and setError
+  }, [selectedRaceId, calculateWinner, setError]);
 
   useEffect(() => {
     fetchRaceDetails();
@@ -245,30 +188,67 @@ function ResultsPage() {
     }
     setError(null);
 
-    const resultsPayload = {
-        ...results,
-        resultsSetAt: serverTimestamp()
+    // Construct the results payload WITH the server timestamp placeholder
+    const resultsPayloadForDb = {
+        first: results.first,
+        second: results.second,
+        third: results.third,
+        resultsSetAt: serverTimestamp() // Use the placeholder for writing
+    };
+
+    // Construct results payload for local calculation (without timestamp placeholder)
+    const resultsPayloadForCalc = {
+        first: results.first,
+        second: results.second,
+        third: results.third
+        // resultsSetAt is not needed for calculation logic
     };
 
     try {
       const raceDocRef = doc(db, 'races', selectedRaceId);
       await updateDoc(raceDocRef, {
-         results: resultsPayload,
+         results: resultsPayloadForDb, // Use payload with server timestamp
          status: 'finished'
       });
       console.log('Results set successfully');
-      // Refetch data first to ensure resultsSetAt is a valid timestamp
-      await fetchRaceDetails();
-      // Now trigger calculation using the just-fetched (or about to be fetched) data
-      // Note: fetchRaceDetails itself will call calculateWinner if conditions are met
-      // We might need to pass the resultsPayload directly if fetchRaceDetails hasn't updated state yet
-      // Let's rely on the fetchRaceDetails logic for now.
-      // If it proves unreliable due to timing, we can call explicitly:
-      // calculateWinner(selectedRaceId, resultsPayload);
+      // Immediately trigger calculation with the known results, no need to wait for refetch
+      // This avoids potential timing issues with fetchRaceDetails
+      calculateWinner(selectedRaceId, resultsPayloadForCalc);
+      // Optionally, still fetch details to update the UI completely, but calculation is done
+      fetchRaceDetails();
 
     } catch (err) {
       console.error("Error setting results:", err);
       setError('Failed to set race results.');
+    }
+  };
+
+  // Function to clear results for the current race
+  const handleClearResults = async () => {
+    if (!isAdmin || !selectedRaceId) return;
+
+    // Optional: Add a confirmation dialog
+    if (!window.confirm('Are you sure you want to clear the results for this race? This cannot be undone.')) {
+        return;
+    }
+
+    setError(null); // Clear previous errors
+    setWinnerData(null); // Clear winner display immediately
+
+    try {
+      const raceDocRef = doc(db, 'races', selectedRaceId);
+      await updateDoc(raceDocRef, {
+        results: deleteField(), // Use deleteField to remove the results map
+        status: 'locked' // Revert status to 'locked' (or 'open' if preferred)
+      });
+      console.log('Results cleared successfully');
+      // Refetch details to update the UI (remove results display, update status)
+      fetchRaceDetails();
+    } catch (err) {
+      console.error("Error clearing results:", err);
+      setError('Failed to clear race results.');
+      // Consider refetching even on error to ensure UI consistency
+      fetchRaceDetails();
     }
   };
 
@@ -294,6 +274,7 @@ function ResultsPage() {
               currentResults={selectedRaceData?.results}
               onSetStatus={handleSetStatus}
               onSetResults={handleSetResults}
+              onClearResults={handleClearResults}
             />
           )}
           <hr />
