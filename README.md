@@ -89,6 +89,7 @@ Objective: Build UI and logic for race selection, horse management, picks submis
     *   [x] Associate with races.
 *   Race Management Page (`<RaceAdminPage>`, `/admin/races`) - *Admin Only*:
     *   [x] Create new races.
+    *   [x] Select existing race, view associated horses, mark/unmark horses as scratched, and save changes.
 *   Picks Page (`<PicksPage>`, `/picks/:raceId`):
     *   [x] Implement `RaceSelector` logic (fetch races).
     *   [x] Fetch horses for the selected race.
