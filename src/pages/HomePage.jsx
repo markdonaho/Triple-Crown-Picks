@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../services/firebase';
 import { collection, getDocs, query, orderBy, where, documentId, Timestamp } from 'firebase/firestore';
+import { calculateScores } from '../utils/scoring'; // Import the scoring function
 
 // Helper to check if a Firestore Timestamp is today
 const isToday = (timestamp) => {
@@ -16,7 +17,7 @@ const isToday = (timestamp) => {
 function HomePage() {
   const [allRaces, setAllRaces] = useState([]);
   const [allHorsesMap, setAllHorsesMap] = useState(new Map());
-  const [relevantPicks, setRelevantPicks] = useState([]);
+  const [allPicks, setAllPicks] = useState([]);
   const [usersMap, setUsersMap] = useState(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,40 +39,16 @@ function HomePage() {
         horsesSnapshot.docs.forEach(doc => horsesMap.set(doc.id, { id: doc.id, ...doc.data() }));
         setAllHorsesMap(horsesMap);
 
-        // 3. Identify relevant races ('open' or 'today')
-        // Fetch scratchedHorses along with other race data
-        const relevantRacesData = racesData
-          .filter(race => race.status === 'open' || isToday(race.date))
-          .map(race => ({ ...race, scratchedHorses: race.scratchedHorses || [] })); // Ensure array exists
+        // 3. Fetch ALL picks
+        const allPicksSnapshot = await getDocs(collection(db, 'picks'));
+        const picksData = allPicksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setAllPicks(picksData);
 
-        const relevantRaceIds = relevantRacesData.map(race => race.id);
-
-        let picksData = [];
-        let userMapData = new Map();
-
-        if (relevantRaceIds.length > 0) {
-          // 4. Fetch picks for relevant races
-          const picksQuery = query(collection(db, 'picks'), where('raceId', 'in', relevantRaceIds));
-          const picksSnapshot = await getDocs(picksQuery);
-          picksData = picksSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setRelevantPicks(picksData);
-
-          // 5. Get unique user IDs from picks
-          const userIds = [...new Set(picksData.map(pick => pick.userId))];
-
-          if (userIds.length > 0) {
-            // 6. Fetch user data for those IDs
-            // Firestore 'in' query limit is 30 - fetch in chunks if necessary
-            const MAX_IDS_PER_QUERY = 30;
-            for (let i = 0; i < userIds.length; i += MAX_IDS_PER_QUERY) {
-                const chunkUserIds = userIds.slice(i, i + MAX_IDS_PER_QUERY);
-                const usersQuery = query(collection(db, 'users'), where(documentId(), 'in', chunkUserIds));
-                const usersSnapshot = await getDocs(usersQuery);
-                usersSnapshot.docs.forEach(doc => userMapData.set(doc.id, { id: doc.id, ...doc.data() }));
-            }
-            setUsersMap(userMapData);
-          }
-        }
+        // 4. Fetch ALL users
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const userMapData = new Map();
+        usersSnapshot.docs.forEach(doc => userMapData.set(doc.id, { id: doc.id, ...doc.data() }));
+        setUsersMap(userMapData);
 
       } catch (err) {
         console.error("Error fetching homepage data:", err);
@@ -113,17 +90,77 @@ function HomePage() {
       });
   };
 
-  // Group picks by raceId
-  const picksByRace = useMemo(() => {
+  // Group ALL picks by raceId for efficient lookup in relevant races section
+  const allPicksByRace = useMemo(() => {
       const grouped = {};
-      relevantPicks.forEach(pick => {
+      allPicks.forEach(pick => {
           if (!grouped[pick.raceId]) {
               grouped[pick.raceId] = [];
           }
           grouped[pick.raceId].push(pick);
       });
       return grouped;
-  }, [relevantPicks]);
+  }, [allPicks]);
+
+  // --- Scoreboard Calculation ---
+  const finishedRaces = useMemo(() => {
+      return allRaces.filter(race => race.status === 'finished' && race.results && race.results.first);
+  }, [allRaces]);
+
+  const scoreboardData = useMemo(() => {
+      const userScores = new Map(); // Map<userId, { userName: string, totalScore: number, raceScores: Map<raceId, number> }>
+
+      // Initialize all registered users with 0 scores
+      usersMap.forEach((user, userId) => {
+          userScores.set(userId, {
+              userName: user.displayName || `User ${userId.substring(0,5)}?`,
+              totalScore: 0,
+              raceScores: new Map() // Map<raceId, score>
+          });
+      });
+
+      // Calculate scores for each finished race
+      finishedRaces.forEach(race => {
+          const racePicks = allPicksByRace[race.id] || [];
+          const raceScores = calculateScores(
+              racePicks,
+              race.results,
+              {}, // Pass empty map for usersMap argument to calculateScores as it's not needed here
+              race.scratchedHorses || []
+          ); // Returns { userId: score }
+
+          // Add race score to each user's total and race-specific scores
+          Object.entries(raceScores).forEach(([userId, score]) => {
+              if (userScores.has(userId)) {
+                  const userData = userScores.get(userId);
+                  userData.totalScore += score;
+                  userData.raceScores.set(race.id, score);
+                  userScores.set(userId, userData);
+              }
+              // If a pick exists for a user not in usersMap (shouldn't happen with current logic), ignore it
+          });
+      });
+
+      // Convert map to array and sort by total score descending
+      return Array.from(userScores.values()).sort((a, b) => b.totalScore - a.totalScore);
+
+  }, [allRaces, allPicks, usersMap, finishedRaces, allPicksByRace]);
+  // --- End Scoreboard Calculation ---
+
+  // Group picks by raceId (Used for the 'Today/Open' section display)
+  const picksByRace = useMemo(() => {
+      const grouped = {};
+      // Filter allPicks to only include picks for relevant (open/today) races
+      allPicks.forEach(pick => {
+          if (relevantRaces.some(race => race.id === pick.raceId)) {
+             if (!grouped[pick.raceId]) {
+                 grouped[pick.raceId] = [];
+             }
+             grouped[pick.raceId].push(pick);
+          }
+      });
+      return grouped;
+  }, [allPicks, relevantRaces]); // Depends on allPicks and relevantRaces
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -257,6 +294,58 @@ function HomePage() {
           </ul>
         )}
       </section>
+
+      {/* --- Scoreboard Section --- */}
+      <section className="bg-white p-6 rounded-lg shadow mb-12">
+        <h2 className="text-2xl font-bold mb-6 border-b pb-3 text-gray-800">Overall Standings</h2>
+        {loading && <p className="text-center text-gray-500">Loading scores...</p>}
+        {error && <p className="text-center text-red-600 font-semibold">{error}</p>}
+        {!loading && !error && (
+          <div className="overflow-x-auto rounded-md shadow-sm border border-gray-200">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-2 text-left font-semibold text-gray-600 uppercase tracking-wider sticky left-0 bg-gray-100 z-10">User</th>
+                  {/* Add columns for ALL races */}
+                  {allRaces.map(race => (
+                    <th key={race.id} className="px-4 py-2 text-center font-semibold text-gray-600 uppercase tracking-wider" title={race.name}>
+                      {/* Abbreviate long race names for header */}
+                      {race.name.length > 15 ? race.name.substring(0, 12) + '...' : race.name}
+                    </th>
+                  ))}
+                  <th className="px-4 py-2 text-right font-semibold text-gray-600 uppercase tracking-wider sticky right-0 bg-gray-100 z-10">Total Score</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {scoreboardData.length > 0 ? (
+                  scoreboardData.map((userData, index) => (
+                    <tr key={userData.userName} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-4 py-2 whitespace-nowrap font-medium text-gray-900 sticky left-0 bg-inherit z-10">{userData.userName}</td>
+                      {/* Display score for each race, showing 0 if not finished or no score */}
+                      {allRaces.map(race => (
+                        <td key={race.id} className="px-4 py-2 whitespace-nowrap text-gray-500 text-center">
+                          {(finishedRaces.some(fr => fr.id === race.id) && userData.raceScores.get(race.id)) || 0}
+                        </td>
+                      ))}
+                      <td className="px-4 py-2 whitespace-nowrap text-gray-700 text-right font-semibold sticky right-0 bg-inherit z-10">
+                        {userData.totalScore}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    {/* Adjust colspan to account for all races + user + total */}
+                    <td colSpan={allRaces.length + 2} className="px-4 py-4 text-center text-gray-500 italic">
+                      No scores calculated yet. Ensure races are marked 'finished' and results are entered.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+      {/* --- End Scoreboard Section --- */}
 
     </div>
   );
