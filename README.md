@@ -84,6 +84,7 @@ Objective: Build UI and logic for race selection, horse management, picks submis
 *   Home Page (`<HomePage>`):
     *   [x] Automatically displays details (entries, odds, all user picks) for races that are 'open' or running 'today'.
     *   [x] Lists all races with links to their respective picks pages.
+    *   [x] Displays an overall standings scoreboard showing user scores per race and total score.
 *   Horse Management Page (`<HorseAdminPage>`, `/admin/horses`) - *Admin Only*:
     *   [x] List, add, edit, remove horses.
     *   [x] Associate with races.
