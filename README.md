@@ -179,3 +179,6 @@ allow delete: if request.auth != null && get(/databases/$(database)/documents/us
 }
 }
 }
+
+**Future Enhancements / Technical Debt**
+*   [ ] **Refactor Firestore Writes to Cloud Functions:** Migrate critical write operations (e.g., submitting/updating picks) and all administrative actions (managing races, horses, results, scratches) to Firebase Cloud Functions (HTTPS callable). This enhances security by removing direct client-side write access for these operations (relying on function authentication/authorization checks) and centralizes business logic. Client-side reads can remain for display purposes, utilizing robust Firestore security rules.
