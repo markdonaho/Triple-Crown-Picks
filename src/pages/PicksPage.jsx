@@ -34,6 +34,7 @@ function PicksPage() {
   const [errorRaceDetails, setErrorRaceDetails] = useState(null); // Placeholder
   const [isSubmitting, setIsSubmitting] = useState(false); // State for submission loading
   const [submitError, setSubmitError] = useState(null); // State for submission error
+  const [scratchedHorses, setScratchedHorses] = useState([]); // State for scratched horses
 
   // Memoize the sorted horses list
   const sortedHorses = useMemo(() => sortHorsesByPost(horses), [horses]);
@@ -76,6 +77,7 @@ function PicksPage() {
         setHorses([]);
         setCurrentPicks(null);
         setRaceStatus('');
+        setScratchedHorses([]); // Clear scratched horses
         return;
     }
 
@@ -113,7 +115,9 @@ function PicksPage() {
 
             // Process race data
             if (raceDocSnap.exists()) {
-                setRaceStatus(raceDocSnap.data().status || 'unknown');
+                const raceData = raceDocSnap.data();
+                setRaceStatus(raceData.status || 'unknown');
+                setScratchedHorses(raceData.scratchedHorses || []); // Set scratched horses
             } else {
                 console.error("Race document not found!");
                 throw new Error(`Race with ID ${selectedRaceId} not found.`); // Throw error to be caught below
@@ -138,6 +142,7 @@ function PicksPage() {
             setHorses([]);
             setCurrentPicks(null);
             setRaceStatus('');
+            setScratchedHorses([]); // Clear scratched on error too
         } finally {
             setLoadingRaceDetails(false);
         }
@@ -215,6 +220,20 @@ function PicksPage() {
   const canEditPicks = raceStatus === 'upcoming' || raceStatus === 'open';
   const selectedRaceName = races.find(r => r.id === selectedRaceId)?.name || 'Selected Race';
 
+  // --- Check for scratched horses in user's picks --- 
+  const userHasScratchedPick = useMemo(() => {
+    if (!currentPicks || scratchedHorses.length === 0) {
+        return false;
+    }
+    const scratchedSet = new Set(scratchedHorses);
+    return scratchedSet.has(currentPicks.first) || 
+           scratchedSet.has(currentPicks.second) || 
+           scratchedSet.has(currentPicks.third);
+  }, [currentPicks, scratchedHorses]);
+
+  const showScratchWarning = userHasScratchedPick && (raceStatus === 'open' || raceStatus === 'upcoming');
+  // --- End check ---
+
   // Handle loading states
   if (authLoading) {
       return <p>Loading user information...</p>;
@@ -249,13 +268,20 @@ function PicksPage() {
           {/* Only render form/display if details are loaded */}
           {!loadingRaceDetails && !errorRaceDetails && (
             <>
-              <p>Status: {raceStatus || 'Loading...'}</p>
+              <p>Status: {raceStatus.toUpperCase()}</p>
 
-              {/* Horse Details Table */} 
-              <div className="my-8">
-                <h3 className="text-xl font-semibold mb-4">Entries</h3>
-                {sortedHorses.length > 0 ? (
-                  <div className="mb-6 flex justify-center">
+              {/* --- Scratch Warning Message --- */}
+              {showScratchWarning && (
+                <div style={{ border: '2px solid red', padding: '10px', margin: '1rem 0', backgroundColor: '#fff0f0', borderRadius: '4px' }}>
+                  <strong style={{color: 'red'}}>Warning:</strong> One or more of your selected horses have been scratched. Please update your picks!
+                </div>
+              )}
+              {/* --- End Warning Message --- */}
+
+              {/* Display Horses Table */}
+              <h3>Horses Entered</h3>
+              {sortedHorses.length > 0 ? (
+                <div className="mb-6 flex justify-center">
                     <div className="overflow-x-auto rounded-md shadow-sm">
                         <table className="divide-y divide-gray-200 text-sm">
                             <thead className="bg-gray-100">
@@ -266,24 +292,25 @@ function PicksPage() {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {sortedHorses.map((horse, index) => (
-                                    <tr key={horse.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                        <td className="px-2 py-2 whitespace-nowrap font-medium text-gray-900 text-center">{horse.postPosition ?? '-'}</td>
-                                        <td className="px-2 py-2 whitespace-nowrap text-gray-700 text-center">{horse.name}</td>
-                                        <td className="px-2 py-2 whitespace-nowrap text-gray-500 text-center">{horse.odds ?? '-'}</td>
-                                    </tr>
-                                ))}
+                                {sortedHorses.map((horse, index) => {
+                                    const isScratched = scratchedHorses.includes(horse.id);
+                                    return (
+                                        <tr key={horse.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${isScratched ? 'opacity-60' : ''}`}>
+                                            <td className="px-2 py-2 whitespace-nowrap font-medium text-gray-900 text-center">{horse.postPosition ?? '-'}</td>
+                                            <td className={`px-2 py-2 whitespace-nowrap text-gray-700 text-center ${isScratched ? 'line-through' : ''}`}>{horse.name}{isScratched ? ' (SCR)' : ''}</td>
+                                            <td className="px-2 py-2 whitespace-nowrap text-gray-500 text-center">{horse.odds ?? '-'}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
-                  </div>
-                ) : (
-                  <p>No horses entered for this race yet.</p>
-                )}
-              </div>
-              {/* End Horse Details Table */}
+                </div>
+              ) : (
+                <p>No horses entered for this race yet.</p>
+              )}
 
-              <PicksDisplay picks={currentPicks} horses={horses} />
+              <PicksDisplay picks={currentPicks} horses={horses} scratchedHorses={scratchedHorses} />
 
               {canEditPicks ? (
                 <PicksForm
@@ -292,6 +319,7 @@ function PicksPage() {
                   onSubmit={handlePicksSubmit}
                   raceStatus={raceStatus}
                   isSubmitting={isSubmitting} // Pass submitting state
+                  scratchedHorses={scratchedHorses} // <-- Pass scratched horses
                 />
               ) : (
                 raceStatus && <p>Picking is closed for this race ({raceStatus}).</p>

@@ -9,9 +9,10 @@ const POINTS_CORRECT_HORSE_WRONG_PLACE = 0.5;
  * @param {Array} picks - Array of pick objects, e.g., { userId: '...', first: 'h1', second: 'h2', third: 'h3' }
  * @param {Object} officialResults - Object with official winners, e.g., { first: 'h1', second: 'h2', third: 'h3' }
  * @param {Object} usersMap - Map or Object mapping userId to user data (optional, for debugging/future use)
+ * @param {Array<String>} [scratchedHorses=[]] - Array of horse IDs that were scratched from the race.
  * @returns {Object} - Object mapping userId to their calculated score.
  */
-export function calculateScores(picks, officialResults, usersMap = {}) {
+export function calculateScores(picks, officialResults, usersMap = {}, scratchedHorses = []) {
   if (!picks || picks.length === 0 || !officialResults || !officialResults.first || !officialResults.second || !officialResults.third) {
     return {}; // Return empty scores if no picks or incomplete results
   }
@@ -22,6 +23,7 @@ export function calculateScores(picks, officialResults, usersMap = {}) {
       officialResults.second,
       officialResults.third
   ]);
+  const scratchedSet = new Set(scratchedHorses); // Set for efficient lookup
 
   picks.forEach(pick => {
     let currentScore = 0;
@@ -30,23 +32,29 @@ export function calculateScores(picks, officialResults, usersMap = {}) {
     const pickSecond = pick.second || null;
     const pickThird = pick.third || null;
 
-    // Check exact matches
-    if (pickFirst && pickFirst === officialResults.first) {
-      currentScore += POINTS_FIRST;
-    } else if (pickFirst && winningHorses.has(pickFirst)) { // Horse was in top 3, but wrong place
-      currentScore += POINTS_CORRECT_HORSE_WRONG_PLACE;
+    // Check exact matches, ignoring scratched horses
+    if (pickFirst && !scratchedSet.has(pickFirst)) { // Check if NOT scratched
+      if (pickFirst === officialResults.first) {
+        currentScore += POINTS_FIRST;
+      } else if (winningHorses.has(pickFirst)) { // Horse was in top 3, but wrong place
+        currentScore += POINTS_CORRECT_HORSE_WRONG_PLACE;
+      }
     }
 
-    if (pickSecond && pickSecond === officialResults.second) {
-      currentScore += POINTS_SECOND;
-    } else if (pickSecond && winningHorses.has(pickSecond)) { // Horse was in top 3, but wrong place
-      currentScore += POINTS_CORRECT_HORSE_WRONG_PLACE;
+    if (pickSecond && !scratchedSet.has(pickSecond)) { // Check if NOT scratched
+      if (pickSecond === officialResults.second) {
+        currentScore += POINTS_SECOND;
+      } else if (winningHorses.has(pickSecond)) { // Horse was in top 3, but wrong place
+        currentScore += POINTS_CORRECT_HORSE_WRONG_PLACE;
+      }
     }
 
-    if (pickThird && pickThird === officialResults.third) {
-      currentScore += POINTS_THIRD;
-    } else if (pickThird && winningHorses.has(pickThird)) { // Horse was in top 3, but wrong place
-      currentScore += POINTS_CORRECT_HORSE_WRONG_PLACE;
+    if (pickThird && !scratchedSet.has(pickThird)) { // Check if NOT scratched
+      if (pickThird === officialResults.third) {
+        currentScore += POINTS_THIRD;
+      } else if (winningHorses.has(pickThird)) { // Horse was in top 3, but wrong place
+        currentScore += POINTS_CORRECT_HORSE_WRONG_PLACE;
+      }
     }
 
     // Aggregate scores per user

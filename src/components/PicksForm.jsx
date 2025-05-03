@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 // TODO: Implement form state management
 // TODO: Populate dropdowns with horses
 // TODO: Add validation (e.g., can't pick same horse twice)
-function PicksForm({ horses = [], initialPicks, onSubmit, raceStatus, isSubmitting = false }) {
+function PicksForm({ horses = [], initialPicks, onSubmit, raceStatus, isSubmitting = false, scratchedHorses = [] }) {
   const [first, setFirst] = useState('');
   const [second, setSecond] = useState('');
   const [third, setThird] = useState('');
+
+  // Use a Set for efficient lookup of scratched horses
+  const scratchedSet = useMemo(() => new Set(scratchedHorses), [scratchedHorses]);
 
   useEffect(() => {
     // Pre-fill form if initialPicks exist
@@ -45,21 +48,42 @@ function PicksForm({ horses = [], initialPicks, onSubmit, raceStatus, isSubmitti
         <label>1st Place: </label>
         <select value={first} onChange={e => setFirst(e.target.value)} disabled={isDisabled}>
           <option value="">-- Select Horse --</option>
-          {horses.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+          {horses.map(h => {
+            const isScratched = scratchedSet.has(h.id);
+            return (
+              <option key={h.id} value={h.id} disabled={isScratched}>
+                {h.name}{isScratched ? ' (SCR)' : ''}
+              </option>
+            );
+          })}
         </select>
       </div>
       <div>
         <label>2nd Place: </label>
         <select value={second} onChange={e => setSecond(e.target.value)} disabled={isDisabled}>
           <option value="">-- Select Horse --</option>
-          {horses.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+          {horses.map(h => {
+            const isScratched = scratchedSet.has(h.id);
+            return (
+              <option key={h.id} value={h.id} disabled={isScratched}>
+                {h.name}{isScratched ? ' (SCR)' : ''}
+              </option>
+            );
+          })}
         </select>
       </div>
       <div>
         <label>3rd Place: </label>
         <select value={third} onChange={e => setThird(e.target.value)} disabled={isDisabled}>
           <option value="">-- Select Horse --</option>
-          {horses.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
+          {horses.map(h => {
+            const isScratched = scratchedSet.has(h.id);
+            return (
+              <option key={h.id} value={h.id} disabled={isScratched}>
+                {h.name}{isScratched ? ' (SCR)' : ''}
+              </option>
+            );
+          })}
         </select>
       </div>
       <button 

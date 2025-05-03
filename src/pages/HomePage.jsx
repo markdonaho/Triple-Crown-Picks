@@ -39,9 +39,12 @@ function HomePage() {
         setAllHorsesMap(horsesMap);
 
         // 3. Identify relevant races ('open' or 'today')
-        const relevantRaceIds = racesData
+        // Fetch scratchedHorses along with other race data
+        const relevantRacesData = racesData
           .filter(race => race.status === 'open' || isToday(race.date))
-          .map(race => race.id);
+          .map(race => ({ ...race, scratchedHorses: race.scratchedHorses || [] })); // Ensure array exists
+
+        const relevantRaceIds = relevantRacesData.map(race => race.id);
 
         let picksData = [];
         let userMapData = new Map();
@@ -83,7 +86,9 @@ function HomePage() {
 
   // Memoize relevant races based on allRaces
   const relevantRaces = useMemo(() => {
-    return allRaces.filter(race => race.status === 'open' || isToday(race.date));
+    return allRaces
+           .filter(race => race.status === 'open' || isToday(race.date))
+           .map(race => ({ ...race, scratchedHorses: race.scratchedHorses || [] })); // Also ensure array exists here
   }, [allRaces]);
 
   // Helper function to get horse details
@@ -142,6 +147,7 @@ function HomePage() {
           {!loading && !error && relevantRaces.map(race => {
             const sortedRaceHorses = getSortedHorsesForRace(race.id);
             const racePicks = picksByRace[race.id] || [];
+            const scratchedSet = new Set(race.scratchedHorses || []); // Use a Set for efficient lookup
 
             return (
               <div key={race.id} className="p-6 rounded-lg shadow-md bg-white hover:shadow-lg transition-shadow duration-200">
@@ -170,13 +176,16 @@ function HomePage() {
                             </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                            {sortedRaceHorses.map((horse, index) => (
-                                <tr key={horse.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                <td className="px-4 py-2 whitespace-nowrap font-medium text-gray-900 text-center">{horse.postPosition ?? '-'}</td>
-                                <td className="px-4 py-2 whitespace-nowrap text-gray-700 text-center">{horse.name}</td>
-                                <td className="px-4 py-2 whitespace-nowrap text-gray-500 text-center">{horse.odds ?? '-'}</td>
-                                </tr>
-                            ))}
+                            {sortedRaceHorses.map((horse, index) => {
+                                const isScratched = scratchedSet.has(horse.id);
+                                return (
+                                    <tr key={horse.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${isScratched ? 'opacity-60' : ''}`}>
+                                        <td className="px-4 py-2 whitespace-nowrap font-medium text-gray-900 text-center">{horse.postPosition ?? '-'}</td>
+                                        <td className={`px-4 py-2 whitespace-nowrap text-gray-700 text-center ${isScratched ? 'line-through' : ''}`}>{horse.name}{isScratched ? ' (SCR)' : ''}</td>
+                                        <td className="px-4 py-2 whitespace-nowrap text-gray-500 text-center">{horse.odds ?? '-'}</td>
+                                    </tr>
+                                );
+                            })}
                             </tbody>
                         </table>
                         </div>
@@ -189,14 +198,22 @@ function HomePage() {
                     <h4 className="text-lg font-medium mb-2 text-gray-700">Current Picks</h4>
                     {racePicks.length > 0 ? (
                     <ul className="space-y-2 text-sm list-none pl-0">
-                        {racePicks.map(pick => (
-                        <li key={pick.id} className="p-2 bg-gray-50 rounded">
-                            <strong className="font-semibold text-gray-800">{getUserName(pick.userId)}:</strong>{' '}
-                            <span className="text-gray-600">
-                            {getHorseName(pick.first)} / {getHorseName(pick.second)} / {getHorseName(pick.third)}
-                            </span>
-                        </li>
-                        ))}
+                        {racePicks.map(pick => {
+                            // Check if picked horses are scratched
+                            const firstScratched = scratchedSet.has(pick.first);
+                            const secondScratched = scratchedSet.has(pick.second);
+                            const thirdScratched = scratchedSet.has(pick.third);
+                            return (
+                                <li key={pick.id} className="p-2 bg-gray-50 rounded">
+                                    <strong className="font-semibold text-gray-800">{getUserName(pick.userId)}:</strong>{' '}
+                                    <span className="text-gray-600">
+                                        <span className={firstScratched ? 'line-through opacity-70' : ''}>{getHorseName(pick.first)}{firstScratched ? '(SCR)' : ''}</span> / {' '}
+                                        <span className={secondScratched ? 'line-through opacity-70' : ''}>{getHorseName(pick.second)}{secondScratched ? '(SCR)' : ''}</span> / {' '}
+                                        <span className={thirdScratched ? 'line-through opacity-70' : ''}>{getHorseName(pick.third)}{thirdScratched ? '(SCR)' : ''}</span>
+                                    </span>
+                                </li>
+                            );
+                        })}
                     </ul>
                     ) : (
                     <p className="text-gray-500 italic">No picks submitted for this race yet.</p>

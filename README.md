@@ -34,6 +34,7 @@ Objective: Design Firestore collections to store race information, horses, user 
         *   `name`: String (e.g., "Kentucky Derby 2025")
         *   `date`: Timestamp (Race date/time)
         *   `status`: String (`upcoming`, `open`, `locked`, `finished`) - *Controls pick editing*
+        *   `scratchedHorses`: Array<String> (Optional, list of `horse_id`s scratched from this race)
         *   `results`: Map (Optional, added when results are known)
             *   `first`: String (Winning horse `horse_id`)
             *   `second`: String (Place horse `horse_id`)
